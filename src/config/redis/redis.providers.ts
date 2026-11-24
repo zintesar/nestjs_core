@@ -6,7 +6,20 @@ const REDIS_URL = `redis://${process.env.REDIS_HOST}:${parseInt(process.env.REDI
 const REDIS_USERNAME = process.env.REDIS_USERNAME
 const REDIS_PASS = process.env.REDIS_PASS
 
+const isRedisEnabled = () => process.env.ENABLE_REDIS === 'true';
+
 const createRedisClient = async () => {
+  if (!isRedisEnabled()) {
+    console.info('Redis is disabled (ENABLE_REDIS != true). Using no-op mock Redis client.');
+    return {
+      getClient: () => null,
+      get: async (key: string) => null,
+      set: async (key: string, value: any) => 'OK',
+      setEx: async (key: string, time: number, value: any) => 'OK',
+      del: async (key: string) => 0,
+    };
+  }
+
   let client = null
 
   if (REDIS_USERNAME && REDIS_PASS) {

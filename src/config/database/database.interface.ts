@@ -6,6 +6,7 @@ export interface IDatabaseConfigAttributes {
     host?: string;
     port?: number | string;
     dialect?: string;
+    storage?: string;
     urlDatabase?: string;
     define ?: object;
     pool ?: object;

@@ -26,7 +26,10 @@ export const databaseProviders = [
            config = databaseConfig.development;
         }
         const sequelize = new Sequelize(config);
-        sequelize.addModels(Object.values(models));
+        const modelList = Object.values(models).filter(
+            (item) => typeof item === 'function' && item.prototype instanceof models.UserModel.constructor
+        ) as any[];
+        sequelize.addModels(modelList.length > 0 ? modelList : [models.UserModel, models.UserOtpModel, models.LogModel]);
        //Check connection establish or not......
             sequelize.authenticate()
             .then(function () {

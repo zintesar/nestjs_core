@@ -1,13 +1,108 @@
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import {
+    IsNotEmpty,
+    MinLength,
+    IsEmail,
+    IsString,
+    IsEnum,
+    IsOptional,
+} from 'class-validator';
 
-import { IsNotEmpty, MinLength, IsEmail, IsEnum, isEmpty, isBoolean } from 'class-validator';
-
+export enum UserType {
+    AGENT = 'user',
+    ADMIN = 'admin',
+}
 
 export class LoginAuthDto {
-
+    @ApiProperty({
+        description: 'Username for user authentication',
+        example: 'john_doe',
+    })
     @IsNotEmpty()
     readonly username: string;
 
+    @ApiProperty({
+        description: 'Password for user authentication',
+        example: 'password123',
+    })
     @IsNotEmpty()
     readonly password: string;
-
 }
+
+export class RefreshAuthDto {
+    @ApiProperty({
+        description: 'JWT refresh token',
+        example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+    })
+    @IsNotEmpty()
+    @IsString()
+    refresh_token: string;
+}
+
+export class RegisterAuthDto {
+    @ApiProperty({
+        description: 'Username for registration',
+        example: 'john_doe',
+    })
+    @IsNotEmpty()
+    readonly username: string;
+
+    @ApiProperty({
+        description: 'Email address of the user',
+        example: 'john.doe@example.com',
+    })
+    @IsEmail()
+    readonly email: string;
+
+    @ApiProperty({
+        description: 'Password for registration (min 6 characters)',
+        example: 'password123',
+        minLength: 6,
+    })
+    @IsNotEmpty()
+    @MinLength(6)
+    readonly password: string;
+
+    @ApiProperty({
+        description: 'User type for registration',
+        enum: UserType,
+        enumName: 'UserType',
+        example: UserType.AGENT,
+    })
+    @IsNotEmpty()
+    @IsEnum(UserType, {
+        message: 'user_type must be either agent or admin',
+    })
+    readonly user_type: UserType;
+}
+
+
+export class ForgotPasswordDto {
+    @ApiProperty({
+        description: 'Registered email address of the account',
+        example: 'agent.smith@example.com',
+    })
+    @IsNotEmpty({ message: 'Email address is required' })
+    @IsEmail({}, { message: 'Must be a valid email address' })
+    readonly email: string;
+}
+
+export class VerifyOtpResetPasswordDto {
+    @ApiProperty({
+        description: 'Registered email address of the account',
+        example: 'agent.smith@example.com',
+    })
+    @IsNotEmpty({ message: 'Email address is required' })
+    @IsEmail({}, { message: 'Must be a valid email address' })
+    readonly email: string;
+
+    @ApiProperty({
+        description: '6-digit OTP code received via email',
+        example: '592814',
+    })
+    @IsNotEmpty({ message: 'OTP verification code is required' })
+    @IsString()
+    readonly otp: string;
+}
+
+

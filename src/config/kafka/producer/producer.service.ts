@@ -4,24 +4,42 @@ import { decrypt } from '@helpers/cipher';
 
 const IS_CRD_PLAIN = process.env.IS_CRD_PLAIN == 'true' ? true : false
 const KAFKA_BROKERS = IS_CRD_PLAIN ? process.env.KAFKA_BROKERS : decrypt(process.env.KAFKA_BROKERS)
+const isKafkaEnabled = () => process.env.ENABLE_KAFKA === 'true';
 
 //publish meesaage / write message in a topic..
 @Injectable()
 export class ProducerService implements OnModuleInit, OnApplicationShutdown {
+    private readonly kafka: Kafka | null = null;
+    private readonly producer: Producer | null = null;
+
+    constructor() {
+        if (isKafkaEnabled() && KAFKA_BROKERS) {
+            this.kafka = new Kafka({
+                brokers: [KAFKA_BROKERS],
+            });
+            this.producer = this.kafka.producer();
+        } else {
+            console.info('Kafka Producer is disabled (ENABLE_KAFKA != true).');
+        }
+    }
+
     async onApplicationShutdown() {
-        await this.producer.disconnect()
+        if (this.producer) {
+            await this.producer.disconnect();
+        }
     }
+
     async onModuleInit() {
-        await this.producer.connect()
+        if (this.producer) {
+            await this.producer.connect();
+        }
     }
-
-    private readonly kafka = new Kafka({
-        brokers: [KAFKA_BROKERS],
-    })
-
-    private readonly producer: Producer = this.kafka.producer()
 
     async produce(record: ProducerRecord) {
-        await this.producer.send(record)
+        if (!this.producer) {
+            console.info('Kafka is disabled. Skipping produce record:', record.topic);
+            return;
+        }
+        await this.producer.send(record);
     }
 }
